@@ -4,6 +4,9 @@ name: Theme preview
 # software renderer, the same code, shaders and font as on the console) and keeps the pictures
 # as an artifact. A few minutes, without building the emulator.
 on:
+  # Also at every push to the theme's branch.
+  push:
+    branches: [switch-theme]
   workflow_dispatch:
     inputs:
       theme:
