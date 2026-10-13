@@ -34,12 +34,12 @@ jobs:
 
       - name: Draw the screens
         env:
-          PE_THEME: ${{ inputs.theme }}
+          PE_THEME: ${{ inputs.theme || 'switch' }}
         run: bash tools/launcher/preview.sh "$RUNNER_TEMP/preview"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: preview-${{ inputs.theme }}
+          name: preview-${{ inputs.theme || 'switch' }}
           path: ${{ runner.temp }}/preview
           if-no-files-found: error
           retention-days: 7
