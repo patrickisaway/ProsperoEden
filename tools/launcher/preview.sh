@@ -8,6 +8,7 @@
 # The same screens, shaders and font as on the console, with sample data.
 # PE_LANG=<tag> shows them in that language (ui/lang/<tag>.po).
 # PE_LOOK=large,contrast,calm shows them with those accessibility settings on.
+# PE_THEME=<id> shows them in that theme (docs/THEMES.md), for example PE_THEME=switch.
 # PE_SYSTEM_FONTS=<folder> names a folder with copies of the console's fonts
 # (/preinst/common/font): Japanese, Korean, Chinese, Greek, Thai and Arabic text is drawn with
 # them, as on the console. Without it such text shows as question marks.

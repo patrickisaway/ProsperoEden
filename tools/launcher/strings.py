@@ -223,6 +223,7 @@ NOTES = {
     "Theme": "A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).",
     "The look of this menu.": "Under the title Theme: what a theme changes.",
     "Tropical dusk, dark green glass and lime.": "One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.",
+    "Flat charcoal and blue, like the Switch's dark home menu.": "One line about the theme named Switch: its look copies the Nintendo Switch's dark home menu, a flat charcoal grey with a blue highlight. Switch is a name and stays as it is.",
     "About": "The menu's last section: about this app (its credits, where its files go). One short word.",
 }
 

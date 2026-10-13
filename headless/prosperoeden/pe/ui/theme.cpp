@@ -81,9 +81,67 @@ Theme canopy()
     return t;
 }
 
+// Switch: the flat charcoal and blue of the Nintendo Switch's dark home menu. No artwork to speak
+// of: one even grey, lighter grey plates, the blue of its highlight.
+Theme nintendo_switch()
+{
+    Theme t;
+    // The kit's flat tiles: no glass, no depth, square corners, a firm ring for the focus.
+    theme_from_kit("tiles", &t);
+    t.id = "switch";
+    t.name = "Switch";
+    t.summary = TR("Flat charcoal and blue, like the Switch's dark home menu.");
+
+    t.base = rgb(0x313131);
+    t.scrim = rgb(0x141414);
+    t.glass = rgb(0x555555);
+    t.panel = rgb(0x3d3d3d);
+    t.panel_edge = rgb(0x6b6b6b);
+    t.row = rgb(0x464646);
+    t.row_edge = rgb(0x5f5f5f);
+    t.row_focus = rgb(0x4f4f4f);
+
+    t.accent = rgb(0x3e97f7);
+    t.accent_deep = rgb(0x1f6dcc);
+    t.accent_pale = rgb(0x5aaaf9);
+    t.on_accent = rgb(0x161616);
+    t.highlight = rgb(0x3e97f7);
+
+    t.text = rgb(0xe5e5e5);
+    t.title = rgb(0xffffff);
+    t.value = rgb(0xf2f2f2);
+    t.body = rgb(0xdadada);
+    t.copy = rgb(0xc8c8c8);
+    t.meta = rgb(0xb4b4b4);
+    t.label = rgb(0xaaaaaa);
+    t.muted = rgb(0xa4a4a4);
+    t.faint = rgb(0x8a8a8a);
+    t.warning = rgb(0xff8a73);
+    t.rule = rgb(0x717171);
+
+    t.radius_row = 8.0f;
+    t.radius_card = 4.0f;
+    t.radius_panel = 12.0f;
+    t.pill_chips = true;
+    t.focus_width = 4.0f;
+    t.focus_glow = 10.0f;
+    t.glass_panels = false;
+
+    t.backdrop = "switch-backdrop.tga";
+    t.backdrop_blur = "switch-backdrop-blur.tga";
+    t.brand = "switch-brand.tga";
+    // The art has no light of its own: what little glow there is sits behind the home screen's
+    // cover (home.cpp, kCover), as the cover's halo.
+    t.light_x = 0.814f;
+    t.light_y = 0.375f;
+    t.motes = 0;
+    t.drift = 0.0f;
+    return t;
+}
+
 struct Store
 {
-    std::array<Theme, 1> all{canopy()};
+    std::array<Theme, 2> all{canopy(), nintendo_switch()};
     int index = 0;
     Theme active = all[0];
 };

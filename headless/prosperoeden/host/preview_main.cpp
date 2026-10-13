@@ -1213,6 +1213,13 @@ int main(int argc, char **argv)
         preferences.reduce_motion = names.find("calm") != std::string_view::npos;
         services.set_preferences(preferences);
     }
+    // PE_THEME=<id>: the screens in that theme (docs/THEMES.md) instead of the first.
+    if (const char *wanted = std::getenv("PE_THEME"); wanted != nullptr && wanted[0] != 0)
+    {
+        pe::ui::Preferences preferences = services.preferences();
+        preferences.theme = wanted;
+        services.set_preferences(preferences);
+    }
     pe::ui::Textures textures(batch, services);
     pe::ui::use_theme(services.preferences().theme);
     if (!textures.load_art(assets))

@@ -1,7 +1,8 @@
 # Themes
 
-The launcher's look is a theme. This build has one, **Canopy** (a tropical dusk, dark green
-glass and lime), and it is the one in use. **Settings > Theme** lists the themes a build has; the
+The launcher's look is a theme. This build has two: **Canopy** (a tropical dusk, dark green
+glass and lime), the one a new install uses, and **Switch** (the flat charcoal and blue of the
+Nintendo Switch's dark home menu). **Settings > Theme** lists the themes a build has; the
 choice is kept in the settings file as `"launcher": { "theme": "canopy" }`.
 
 A theme is data. It says what the screens are painted with, and nothing about where things are.
@@ -78,7 +79,7 @@ focus) and then sets its own colours, corners and artwork over it.
 3. Put its artwork in `headless/prosperoeden/ui/art`: a backdrop of 2048 by 1152 (the screen plus
    room to drift), the same picture blurred at a quarter of that size, and a square mark. Name the
    files in the theme.
-4. Look at it: `tools/launcher/preview.sh` draws every screen on a PC. Run it once more with
+4. Look at it: `PE_THEME=<id> tools/launcher/preview.sh` draws every screen on a PC in it. Run it once more with
    `PE_LOOK=large,contrast,calm` (the accessibility settings) and in a language with long words
    (`PE_LANG=de-DE`).
 5. Text on a surface needs a contrast of 4.5 to 1 (3 to 1 from 24 pixels up); check `text`,
