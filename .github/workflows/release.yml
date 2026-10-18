@@ -30,6 +30,8 @@ on:
   # A v* tag, to release: pushes to main build nothing.
   push:
     tags: ['v*']
+    # The fork's Switch UI branch builds at every push.
+    branches: [switch-ui-v1.005]
   pull_request:
   # main every night, for its caches.
   schedule:
@@ -157,7 +159,8 @@ jobs:
       - name: Fetch the ccache snapshot
         if: steps.ccache.outputs.cache-matched-key == ''
         run: |
-          url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/build-cache/ccache-u24.tar"
+          # A fork has no build-cache release of its own: it starts from upstream's.
+          url="$GITHUB_SERVER_URL/blackbearreloaded/ProsperoEden/releases/download/build-cache/ccache-u24.tar"
           if curl -fsSL --retry 3 -o "$RUNNER_TEMP/ccache-u24.tar" "$url"; then
             mkdir -p "$CCACHE_DIR"
             tar -xf "$RUNNER_TEMP/ccache-u24.tar" -C "$CCACHE_DIR"
