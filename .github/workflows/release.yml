@@ -30,8 +30,8 @@ on:
   # A v* tag, to release: pushes to main build nothing.
   push:
     tags: ['v*']
-    # The fork's Switch UI branch builds at every push.
-    branches: [switch-ui-v1.005]
+    # The fork's Switch theme branch builds at every push.
+    branches: [switch-theme]
   pull_request:
   # main every night, for its caches.
   schedule:
