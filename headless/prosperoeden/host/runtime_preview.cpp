@@ -54,7 +54,7 @@ int main(int argc,char**argv) {
     pe::ui::Textures textures(batch,services);textures.load_art(assets);
     pe::audio::Mixer mixer;
     {
-        pe::ui::RuntimeLauncher launcher(services,textures,{&font,texture},batch,true,data,&mixer);
+        pe::ui::RuntimeLauncher launcher(services,textures,{&font,texture},batch,true,data,assets,&mixer);
         GLuint fbo=0,render=0;glGenFramebuffers(1,&fbo);glGenTextures(1,&render);glBindTexture(GL_TEXTURE_2D,render);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
         glBindFramebuffer(GL_FRAMEBUFFER,fbo);glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,render,0);
         pe::gfx::DrawList list;std::vector<std::uint8_t> pixels(static_cast<std::size_t>(width)*height*4),flipped(pixels.size());

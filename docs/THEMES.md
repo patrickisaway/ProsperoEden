@@ -1,23 +1,28 @@
 # Themes
 
-The launcher's look is a theme. This build has two: **Canopy** (a tropical dusk, dark green
-glass and lime) and **Slate** (neutral glass, clean and still). Canopy is the default for a
+The launcher's look is a theme. This build has three: **Canopy** (a tropical dusk, dark green
+glass and lime), **Slate** (neutral glass, clean and still), and **Switch** (the full
+[SwitchLauncher](https://github.com/kasobos67/SwitchLauncher) interface). Canopy is the default for a
 new install. **Settings > Appearance > Theme** lists the themes a build has; the choice is kept in the
 settings file as `"launcher": { "theme": "canopy" }`.
 
-**Settings > Appearance > Launcher** selects a separately installed runtime launcher.
-Runtime packs can replace layout, navigation, assets and sounds without rebuilding the
-app; see [Runtime launcher packs](RUNTIME_LAUNCHERS.md). The built-in color themes
-described here remain compiled into the app. Runtime packs are not loaded into this
-color-theme table.
+Switch is selected through **Theme**, like Canopy and Slate. Its script, images, font,
+sounds and loading scene are packaged inside the app at `ui/switch`. There is no separate
+Switch launcher installation or SwitchLauncher update feed. Switch uses the app's existing
+runtime renderer internally so every HOME, Library, profile, settings, game options,
+dialog and transition uses the original presentation. Its white and black appearances
+remain choices within the Switch theme.
 
-The two show the range: Canopy keeps the rail, the hero and the artwork-driven glass as the
+**Settings > Appearance > Launcher** still selects separately installed runtime launchers
+that the upstream app supports; see [Runtime launcher packs](RUNTIME_LAUNCHERS.md).
+
+Canopy and Slate show the native layout range: Canopy keeps the rail, the hero and the artwork-driven glass as the
 launcher was first drawn. Slate turns on every layout variant — `list_settings`,
 `minimal_home` and `top_nav` (the two-column dashboard), a flat near-opaque scrim
 (`scrim_opacity` 0.92) over a backdrop with no motes or drift, and `game_page_offset` 60
 under its taller header.
 
-A theme is data. It says what the screens are painted with, and nothing about where things are.
+Canopy and Slate are data-only native themes. Switch is the built-in layout exception.
 
 ## What a theme sets
 
@@ -28,7 +33,7 @@ Everything below is one structure, `pe::ui::Theme` in
 | --- | --- |
 | Identity | `id` (in the settings file), `name` (as Settings shows it), `summary` (one line about it), `kit` (the recipe it starts from), `contract` (the version of the structure it was made for) |
 | Colour: surfaces | `base`, `scrim`, `glass`, `panel`, `panel_edge`, `row`, `row_edge`, `row_focus` |
-| Colour: accent | `accent`, `accent_deep`, `accent_pale`, `on_accent` (text on an accent fill), `highlight` (light in the artwork). Each theme carries an array of accent presets (`AccentPreset`) the player picks from in **Settings > Colour**; the choice is saved as `"launcher": { "accent": "ice" }` |
+| Colour: accent | `accent`, `accent_deep`, `accent_pale`, `on_accent` (text on an accent fill), `highlight` (light in the artwork). Canopy and Slate carry accent presets (`AccentPreset`); Switch keeps its reference palette |
 | Colour: text | `text`, `title`, `value`, `body`, `copy`, `meta`, `label`, `muted`, `faint`, `warning`, `rule` |
 | Type | the sizes of the hero title, a screen's title, rows, captions; how much heavier titles are drawn; the spacing of the small capital headings |
 | Shape | corner radii for rows, cards and panels; whether chips are pills; hairline and focus ring widths; how far the focus ring's light reaches; whether panels are glass |
@@ -38,25 +43,26 @@ Everything below is one structure, `pe::ui::Theme` in
 | Ambient light | how many motes of light rise over the artwork, and how far the artwork drifts |
 | Sound | a folder of `ui/sounds` with its own cues (none: the launcher's own) |
 
-The screen shown while a game loads is drawn by the emulator, not by the launcher, and takes
-four of these colours with it: `accent`, `accent_pale`, `accent_deep` and `base`
-(`Eden::Loading::Palette` in `headless/hud.h`). Everything else on it is the game's own cover.
+The screen shown while a game loads is drawn by the emulator. Canopy and Slate pass
+four colours to it: `accent`, `accent_pale`, `accent_deep` and `base`
+(`Eden::Loading::Palette` in `headless/hud.h`). Switch also supplies its original loading
+scene atlas through the runtime.
 
 ## What a theme does not set
 
-- **Where things are.** A theme can choose between predefined layout variants
+- **Where things are in the native launcher.** Canopy and Slate choose between predefined layout variants
   (`list_settings`, `game_backdrop`, `minimal_home`, `top_nav`, `scrim_opacity`,
   `game_page_offset`) but not invent new ones. `top_nav` is the largest: a two-column
   dashboard where the detail card and Library grid share the home screen, and the other
-  sections draw as right-side panels.
-- **Text.** The words and their translations are the launcher's.
+  sections draw as right-side panels. Switch draws its own layout from the embedded script.
+- **Text.** The native themes use the launcher's translations. SwitchLauncher labels are English-only.
 - **Accessibility.** Larger text, High contrast and Reduce motion lie over whatever theme is in
   use (`pe::ui::Look`). A theme cannot turn them off.
 
 ## Accent colour presets
 
-Surfaces and text belong to the theme; the accent is the one colour set the player may swap.
-Each theme carries its own table of presets (`AccentPreset` in `theme.hpp`): an `id` for the
+Surfaces and text belong to the theme; Canopy and Slate allow their accent colour to be swapped.
+They carry tables of presets (`AccentPreset` in `theme.hpp`): an `id` for the
 settings file, a `name` as Settings shows it, and the five accent roles — `accent`,
 `accent_deep`, `accent_pale`, `on_accent` and `highlight`. Nothing else changes.
 
@@ -125,8 +131,8 @@ light as the focus) and then set their own colours, corners and artwork over it.
 6. Text on a surface needs a contrast of 4.5 to 1 (3 to 1 from 24 pixels up); check `text`,
    `copy` and `meta` on `panel` and `row`, and `on_accent` on `accent`.
 
-Changing the theme in Settings shows in the next frame for colours, corners and motion; artwork
-is read when the launcher opens.
+Changing to Switch activates the embedded presentation. Changing back to Canopy or Slate
+reloads the native artwork. A Switch-specific appearance choice is stored in the theme state.
 
 ## The contract's version
 

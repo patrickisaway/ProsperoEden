@@ -143,6 +143,53 @@ Theme canopy()
     return t;
 }
 
+// The native theme entry selects the embedded SwitchLauncher presentation. Its palettes here
+// cover the transition before the script starts and the native fallback if script loading fails.
+Theme switch_theme()
+{
+    Theme t;
+    theme_from_kit("tiles", &t);
+    t.id = "switch";
+    t.name = "Switch";
+    t.summary = "Nintendo Switch UI";
+    t.base = rgb(0x2d2d2d);
+    t.scrim = rgb(0x2d2d2d);
+    t.glass = rgb(0x414141);
+    t.panel = rgb(0x414141);
+    t.panel_edge = rgb(0x555555);
+    t.row = rgb(0x414141);
+    t.row_edge = rgb(0x555555);
+    t.row_focus = rgb(0x414141);
+    t.accent = rgb(0x30d5c8);
+    t.accent_deep = rgb(0x15516e);
+    t.accent_pale = rgb(0x30d5c8);
+    t.on_accent = rgb(0x252525);
+    t.highlight = rgb(0x4a9bdb);
+    t.text = rgb(0xf5f5f5);
+    t.title = rgb(0xffffff);
+    t.value = rgb(0xf2f2f2);
+    t.body = rgb(0xf5f5f5);
+    t.copy = rgb(0xcfcfcf);
+    t.meta = rgb(0xbdbdbd);
+    t.label = rgb(0xaaaaaa);
+    t.muted = rgb(0xa4a4a4);
+    t.faint = rgb(0x8a8a8a);
+    t.warning = rgb(0xffae2e);
+    t.rule = rgb(0x555555);
+    t.radius_row = 2.0f;
+    t.radius_card = 0.0f;
+    t.radius_panel = 4.0f;
+    t.focus_width = 7.5f;
+    t.focus_glow = 18.0f;
+    t.glass_panels = false;
+    t.motes = 0;
+    t.drift = 0.0f;
+    t.backdrop = "switch-backdrop.tga";
+    t.backdrop_blur = "switch-backdrop-blur.tga";
+    t.brand = "switch-brand.tga";
+    return t;
+}
+
 // ---- accent presets: named colour sets a user can pick per theme ----
 
 const AccentPreset kSlateAccents[] = {
@@ -169,7 +216,7 @@ const AccentPreset kCanopyAccents[] = {
 
 struct Store
 {
-    std::array<Theme, 2> all{canopy(), slate()};
+    std::array<Theme, 3> all{canopy(), slate(), switch_theme()};
     int index = 0;
     int accent = -1;
     Theme active = all[0];

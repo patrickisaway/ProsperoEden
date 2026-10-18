@@ -29,6 +29,7 @@ extern "C" {
 namespace pe::ui {
 using Json = nlohmann::json;
 namespace {
+constexpr std::string_view kEmbeddedSwitch = "switch-theme";
 constexpr std::size_t kScriptBytes = 2 * 1024 * 1024;
 constexpr std::size_t kVmBytes = 16 * 1024 * 1024;
 constexpr int kInstructions = 300000;
@@ -146,7 +147,7 @@ struct RuntimeLauncher::Impl {
     Json query_result;
     Services& services; Textures& covers; Fonts fonts; gfx::GlBatch& batch; audio::Mixer* mixer;
     std::function<void(gfx::Font&)> configure_font;
-    std::string data_root, active = "builtin", last_error, next_id, selected, discovery_error, discovery_report;
+    std::string data_root, ui_root, active = "builtin", last_error, next_id, selected, discovery_error, discovery_report;
     std::unique_ptr<Launcher> builtin; std::unique_ptr<Pack> pack;
     // Mixer clip references remain valid until the frontend has stopped its audio thread.
     std::vector<std::unique_ptr<Pack>> retired;
@@ -154,10 +155,10 @@ struct RuntimeLauncher::Impl {
     std::future<Eden::Multiplayer::RoomDirectory> directory; Eden::Multiplayer::RoomDirectory room_directory;
     std::atomic<bool> stop{false}; std::future<std::optional<std::string>> keyboard;
     Json keyboard_status = { {"ready",false} }, launch = {{"stage","idle"}}, offer;
-    std::string launch_file, launch_profile; bool sync_started{}, first_start{}, picker{}, exit_update{};
+    std::string launch_file, launch_profile; bool sync_started{}, first_start{}, picker{}, exit_update{}, force_builtin_theme{};
     int picker_row{}, draw_commands{}; float time{}, poll{}, catalog_poll{}; std::uint64_t source_generation{}; gfx::DrawList* drawing{};
-    Impl(Services& s, Textures& t, const Fonts& f, gfx::GlBatch& b, bool first, std::string root, audio::Mixer* m, std::function<void(gfx::Font&)> configure)
-        : cached_preferences(s.preferences()), services(s), covers(t), fonts(f), batch(b), mixer(m), data_root(std::move(root)), first_start(first) {
+    Impl(Services& s, Textures& t, const Fonts& f, gfx::GlBatch& b, bool first, std::string root, std::string resources, audio::Mixer* m, std::function<void(gfx::Font&)> configure)
+        : cached_preferences(s.preferences()), services(s), covers(t), fonts(f), batch(b), mixer(m), data_root(std::move(root)), ui_root(std::move(resources)), first_start(first) {
         configure_font=std::move(configure);
         auto version=s.version(); if(version.starts_with("v")) version.erase(0,1);
         launcher_updates::Host host; host.version=version; host.capabilities=kCapabilities;
@@ -288,8 +289,10 @@ struct RuntimeLauncher::Impl {
             query_cache.clear();
             std::unique_ptr<Pack> candidate;
             if (id != "builtin") {
-                candidate = std::make_unique<Pack>(); auto& p = *candidate; p.host = this; p.id = id; p.folder = data_root + "/launchers/" + id;
-                runtime_fs::check(data_root + "/launchers", runtime_fs::Kind::directory);
+                candidate = std::make_unique<Pack>(); auto& p = *candidate; p.host = this; p.id = id;
+                const bool embedded = id == kEmbeddedSwitch;
+                p.folder = embedded ? ui_root + "/switch" : data_root + "/launchers/" + id;
+                if (!embedded) runtime_fs::check(data_root + "/launchers", runtime_fs::Kind::directory);
                 runtime_fs::check(p.folder, runtime_fs::Kind::directory);
                 p.manifest = read_json(pack_path(p.folder,"manifest.json"));
                 if (p.manifest.at("id") != id || p.manifest.at("schema") != 1 || p.manifest.at("api").at("major") != 1 || (p.manifest.at("api").value("min_minor",0) < 0 || p.manifest.at("api").value("min_minor",0) > 1) || p.manifest.value("host_contract","")!="launcher-v1.0") throw std::runtime_error("Launcher API is incompatible");
@@ -323,7 +326,7 @@ struct RuntimeLauncher::Impl {
                 lua_sethook(p.lua,nullptr,0,0); p.module = luaL_ref(p.lua,LUA_REGISTRYINDEX);
                 if (!call(p,"init",{{"state",p.state},{"first_start",first_start},{"api_major",1},{"api_minor",1}},true)) throw std::runtime_error(last_error);
             }
-            if (save && !write_json(data_root + "/config/launcher.json",{{"schema",1},{"selected",id}})) throw std::runtime_error("Could not save launcher selection");
+            if (save && id != kEmbeddedSwitch && !write_json(data_root + "/config/launcher.json",{{"schema",1},{"selected",id}})) throw std::runtime_error("Could not save launcher selection");
             if (pack) { call(*pack,"shutdown"); write_json(data_root+"/config/launcher-state/"+pack->id+".json",pack->state); release_textures(); pack->audio_fence=mixer?mixer->stop_all_fenced():0; retired.push_back(std::move(pack)); }
             builtin.reset(); pack = std::move(candidate); active = id; picker = false; next_id.clear();
             if (pack) { pack->live = true; if(catalog.empty()) refresh(); } else { catalog.release_cached_views(); use_theme(services.preferences().theme); builtin = std::make_unique<Launcher>(services,covers,fonts,first_start); if(offer.is_object() && offer.contains("version")) builtin->accept_update_offer(offer.get<UpdateOffer>()); }
@@ -331,12 +334,22 @@ struct RuntimeLauncher::Impl {
             std::fprintf(stderr,"PE_LAUNCHER_SELECTED id=%s\n",id.c_str()); return true;
         } catch (const std::exception& error) { last_error = error.what(); std::fprintf(stderr,"PE_LAUNCHER_REJECTED id=%s reason=%s\n",id.c_str(),last_error.c_str()); return false; }
     }
+    void restore_native_theme() {
+        auto preferences = services.preferences();
+        preferences.theme = "canopy";
+        preferences.accent.clear();
+        if (services.set_preferences(preferences)) cached_preferences = preferences;
+        else force_builtin_theme = true;
+        use_theme("canopy");
+    }
     void fallback() {
         // Preserve the saved selection for later repair; do not repeatedly reload it this session.
         stop=true;
         if(launch.value("stage","idle")=="syncing") services.stop_save_sync();
         services.cancel_pairing();
-        launch = {{"stage","idle"}}; next_id.clear(); select("builtin",false);
+        launch = {{"stage","idle"}}; next_id.clear();
+        if (active == kEmbeddedSwitch || services.preferences().theme == "switch") restore_native_theme();
+        select("builtin",false);
     }
     const Json& query_cached(Pack& p, const std::string& name, const Json& args) {
         if(name=="library") return catalog.snapshot(scan.valid());
@@ -351,7 +364,8 @@ struct RuntimeLauncher::Impl {
         return query_cache.insert_or_assign(key, std::make_pair(time,std::move(result))).first->second.second;
     }
     Json query(Pack& p, const std::string& name, const Json& args) {
-        if (name == "launcher_updates") return pack_updates->status(p.id);
+        if (name == "launcher_updates")
+            return p.id == kEmbeddedSwitch ? Json{{"phase","unconfigured"}} : pack_updates->status(p.id);
         if (name == "runtime") return {{"api_major",1},{"api_minor",1},{"host_contract","launcher-v1.0"},{"capabilities",kCapabilities}};
         if (name == "state") return p.state;
         if (name == "home") return services.home();
@@ -372,13 +386,23 @@ struct RuntimeLauncher::Impl {
         if (name == "room_form") { const auto r=services.room_connection(); return {{"host",r.host},{"port",r.port},{"nickname",r.nickname}}; }
         if (name == "public_rooms") { Json rows=Json::array(); for (const auto& r:room_directory.rooms) rows.push_back({{"name",r.name},{"game",r.game},{"address",r.address},{"port",r.port},{"players",r.players},{"capacity",r.capacity},{"password",r.password},{"compatible",r.compatible}}); return {{"rooms",rows},{"error",room_directory.error},{"refreshing",directory.valid()}}; }
         if (name == "setup") return {{"details",services.setup_details()},{"save_transfer",services.save_transfer_available()}};
-        if (name == "launchers") { discover(); Json all={{{"id","builtin"},{"name","Built-in launcher"}}}; for (const auto& row:installed) all.push_back(row); return {{"installed",all},{"active",active},{"error",last_error.empty()?discovery_error:last_error}}; }
+        if (name == "launchers") {
+            if (p.id == kEmbeddedSwitch) {
+                Json all = Json::array();
+                all.push_back({{"id","builtin"},{"name","Canopy / Slate"}});
+                all.push_back({{"id",std::string(kEmbeddedSwitch)},{"name","Switch"}});
+                return {{"installed",all},{"active",active},{"error",last_error}};
+            }
+            discover(); Json all={{{"id","builtin"},{"name","Built-in launcher"}}}; for (const auto& row:installed) all.push_back(row); return {{"installed",all},{"active",active},{"error",last_error.empty()?discovery_error:last_error}};
+        }
         if (name == "translate") return std::string{tr(args.value("text","").c_str())};
         if (name == "measure") return p.font.measure(args.value("text",""),args.value("size",24.0f));
         throw std::runtime_error("Unknown launcher query");
     }
     Json action(Pack& p, const std::string& name, const Json& args) {
         bool ok=true; std::string message;
+        if (p.id == kEmbeddedSwitch && name.starts_with("launcher_updates."))
+            throw std::runtime_error("The built-in Switch theme has no separate updater");
         if ((name.starts_with("update.") || name.starts_with("launch.")) && (pack_updates->busy() || commit_started)) {
             if(!commit_started && pack_updates->status("").value("phase","")=="checking") pack_updates->cancel();
             else throw std::runtime_error("Finish or cancel the launcher update first");
@@ -543,7 +567,7 @@ struct RuntimeLauncher::Impl {
             !(builtin && builtin->done());
     }
     void open_updates(const std::string& id) {
-        if(!launcher_updates::valid_id(id) || !update_available()) return;
+        if(id == kEmbeddedSwitch || !launcher_updates::valid_id(id) || !update_available()) return;
         abandon_update_view("Opened native updater");updater_close=false;
         updates_id=id; updates_page=true; rollback_confirmation=false;
         updates_name=id;
@@ -556,7 +580,7 @@ struct RuntimeLauncher::Impl {
         if(updates_poll<0.1f) return;
         updates_poll=0; pack_updates->poll();updater_dirty=true;
         if(!auto_checked && time>=5 && !updates_page && update_available() && !pack_updates->busy()) {
-            auto_checked=true; if(active!="builtin") pack_updates->check(active,true);
+            auto_checked=true; if(active!="builtin" && active!=kEmbeddedSwitch) pack_updates->check(active,true);
         }
         if(!updates_page && !commit_started) return;
         const auto id=updates_id.empty()?active:updates_id;
@@ -669,8 +693,23 @@ struct RuntimeLauncher::Impl {
         if(pack) {
             if(poll_services) { UpdateOffer found; if(services.take_update(&found)) offer=found; }
             if(!call(*pack,"update",{{"dt",std::min(dt,0.05f)},{"time",time}})) fallback();
-            if(!next_id.empty()) { const auto next=next_id; next_id.clear(); select(next); }
-        } else if(builtin) builtin->update(dt);
+            if(!next_id.empty()) {
+                const auto next=next_id; next_id.clear();
+                if(active==kEmbeddedSwitch && next=="builtin") {
+                    restore_native_theme();
+                    select("builtin",false);
+                } else if(next!=active) select(next);
+            } else if(active==kEmbeddedSwitch && cached_preferences.theme!="switch")
+                select("builtin",false);
+        } else if(builtin) {
+            builtin->update(dt);
+            if(!force_builtin_theme && services.preferences().theme=="switch") {
+                // The pack branch compares the cached copy, refreshed only every 0.25 s: bring it up to
+                // date first, or the next frame would see the old theme and switch straight back.
+                cached_preferences=services.preferences();
+                if(!select(std::string(kEmbeddedSwitch),false)) restore_native_theme();
+            }
+        }
     }
     void draw(gfx::DrawList& list) {
         if(updates_page || commit_started) { if(!draw_update_view(list)) draw_updates(list); return; }
@@ -694,13 +733,17 @@ struct RuntimeLauncher::Impl {
     }
 };
 
-RuntimeLauncher::RuntimeLauncher(Services& s, Textures& t, const Fonts& f, gfx::GlBatch& b, bool first, std::string root, audio::Mixer* m, std::function<void(gfx::Font&)> configure)
-    : impl_(std::make_unique<Impl>(s,t,f,b,first,std::move(root),m,std::move(configure))) {
+RuntimeLauncher::RuntimeLauncher(Services& s, Textures& t, const Fonts& f, gfx::GlBatch& b, bool first, std::string root, std::string resources, audio::Mixer* m, std::function<void(gfx::Font&)> configure)
+    : impl_(std::make_unique<Impl>(s,t,f,b,first,std::move(root),std::move(resources),m,std::move(configure))) {
     auto& h=*impl_; h.discover(); h.refresh(); std::string selected="builtin";
     try { selected=read_json(h.data_root+"/config/launcher.json").value("selected","builtin"); }catch(...){}
-    if(!h.last_error.empty()) selected="builtin";
-    struct stat safe{}; if(stat((h.data_root+"/config/force-builtin-launcher").c_str(),&safe)==0) selected="builtin";
-    if(!h.select(selected,false)) h.fallback();
+    if(s.preferences().theme=="switch") selected=std::string(kEmbeddedSwitch);
+    if(!h.last_error.empty()) { selected="builtin"; h.force_builtin_theme=true; }
+    struct stat safe{}; if(stat((h.data_root+"/config/force-builtin-launcher").c_str(),&safe)==0) { selected="builtin"; h.force_builtin_theme=true; }
+    if(!h.select(selected,false)) {
+        if(selected==kEmbeddedSwitch) h.restore_native_theme();
+        h.fallback();
+    }
 }
 RuntimeLauncher::~RuntimeLauncher()=default;
 void RuntimeLauncher::press(Key key) {

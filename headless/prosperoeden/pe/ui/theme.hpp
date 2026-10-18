@@ -17,9 +17,8 @@ using gfx::Align;
 using gfx::Color;
 using gfx::Rect;
 
-// A theme is data: what the launcher's screens are painted with. The screens name roles (accent,
-// panel, title), never a hue, and a theme fills every role. It does not move anything: where the
-// rail, the hero and the lists are is the launcher's. docs/THEMES.md is the contract.
+// Canopy and Slate are data-only native themes. Switch selects an embedded presentation with
+// its own layout while retaining the application's existing services; see docs/THEMES.md.
 //
 // A theme starts from a recipe of the UI kit (ps5-homebrew-ui, `kit`): its surface style, shadows,
 // focus ring and motion, and colours for every role derived from the kit's. It then sets what it

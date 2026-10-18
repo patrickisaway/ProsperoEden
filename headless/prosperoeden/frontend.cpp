@@ -246,7 +246,9 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         if (!input_ready) Eden::Report("menu failure", "The controller could not be opened");
         // Once per launch: is a newer release listed? The launcher shows the answer when it comes.
         Eden::UpdateNotice::Start();
-        pe::ui::RuntimeLauncher launcher(services, textures, fonts, batch, first_start, Eden::kDataDir, audio_ready ? mixer.get() : nullptr, LoadLanguage);
+        pe::ui::RuntimeLauncher launcher(services, textures, fonts, batch, first_start,
+                                        Eden::kDataDir, Eden::AppFile("ui"), audio_ready ? mixer.get() : nullptr, LoadLanguage);
+        int loaded_theme = pe::ui::theme_index();
         int menu_volume = launcher.menu_volume();
         mixer->set_bus_gain(pe::audio::Bus::ui, MenuGain(menu_volume));
         std::fprintf(stderr, "EDEN_LAUNCHER display=%dx%d sounds=%d audio=%d ready_ms=%lld\n", display.width(),
@@ -337,6 +339,11 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
                                                 std::to_string(ms) + " ms").c_str());
             }
             launcher.update(dt);
+            if (pe::ui::theme_index() != loaded_theme) {
+                loaded_theme = pe::ui::theme_index();
+                if (!textures.load_art(Eden::AppFile("ui")))
+                    Eden::Report("menu", "Theme artwork is incomplete");
+            }
             if (launcher.output() != output) {
                 // Output resolution changed in Settings > Video: the display opens again at the new
                 // size, and with it everything that lives in its GL context. The launcher stays as

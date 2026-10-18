@@ -35,6 +35,12 @@ std::uint32_t Textures::create(const gfx::Image &image)
 
 bool Textures::load_art(const std::string &directory)
 {
+    // Theme changes replace these four images while leaving cover and wallpaper caches intact.
+    for (std::uint32_t *texture : {&backdrop_, &backdrop_blur_, &brand_, &controller_})
+    {
+        batch_.delete_texture(*texture);
+        *texture = 0;
+    }
     const auto load = [&](const std::string &name, std::uint32_t *texture)
     {
         gfx::Image image;

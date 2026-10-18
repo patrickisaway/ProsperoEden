@@ -9,7 +9,7 @@ namespace pe::ui {
 class RuntimeLauncher {
 public:
     RuntimeLauncher(Services&, Textures&, const Fonts&, gfx::GlBatch&, bool first_start,
-                    std::string data_root, audio::Mixer* mixer = nullptr,
+                    std::string data_root, std::string ui_root, audio::Mixer* mixer = nullptr,
                     std::function<void(gfx::Font&)> configure_font = {});
     ~RuntimeLauncher();
     RuntimeLauncher(const RuntimeLauncher&) = delete;
