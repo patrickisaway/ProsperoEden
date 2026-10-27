@@ -879,7 +879,9 @@ local function settings_rows(category,per_game)
         rows={toggle("detailed_logging","Detailed logging"),toggle("immediate_logs","Write logs at once","Keeps the last line before a crash, but games stutter. From the next start.")}
         if type(S.prefs.update_notices)=="boolean" then rows[#rows+1]=toggle("update_notices","Update notices","Shows a notice when a ProsperoEden update is found at startup. About still shows available updates. Launcher pack checks use their own setting.") end
         if per_game then rows={button("RNG seed","rng_seed")};rows[1].value=(S.game_settings.rng_seed or -1)<0 and "Random" or tostring(S.game_settings.rng_seed) end
-    elseif category=="Themes" then rows={button("Basic White","theme_white"),button("Basic Black","theme_black"),button("Switch OLED","theme_oled"),button("Launcher","launcher")}
+    elseif category=="Themes" then
+        rows=S.prefs.theme=="switch-oled" and {button("Switch","theme_switch"),button("Switch OLED","theme_oled"),button("Launcher","launcher")}
+            or {button("Basic White","theme_white"),button("Basic Black","theme_black"),button("Switch OLED","theme_oled"),button("Launcher","launcher")}
     elseif category=="Profiles" then
         for i,p in ipairs(S.profiles) do rows[#rows+1]=button(p.name,p.playing and "profile" or "choose_profile");rows[#rows].profile=i;rows[#rows].value=p.playing and "Current user" or "" end
         if #S.profiles<8 then rows[#rows+1]=button("Add user","add_profile") end
@@ -1321,7 +1323,8 @@ local function modal_rows()
         return rows
     elseif kind=="choice" then local rows={};for i,label in ipairs(data.values or {}) do rows[i]=button(label,"choose_value");rows[i].value_index=i end;return rows
     elseif kind=="sort" then return {button("By Title","sort_title"),button("By File Name","sort_file")}
-    elseif kind=="theme" then return {button("Basic Black","theme_black"),button("Basic White","theme_white"),button("Switch OLED","theme_oled")}
+    elseif kind=="theme" then return S.prefs.theme=="switch-oled" and {button("Switch","theme_switch"),button("Switch OLED","theme_oled")}
+        or {button("Basic Black","theme_black"),button("Basic White","theme_white"),button("Switch OLED","theme_oled")}
     elseif kind=="launchers" then local rows={};for _,p in ipairs(Q("launchers").installed) do rows[#rows+1]=button(p.name,"select_launcher");rows[#rows].id=p.id end;return rows
     elseif kind=="mods" then local model=Q("mods",{game=S.game.handle});local rows={}
         for _,m in ipairs(model.mods) do if not m.cheats_only then rows[#rows+1]={label=m.name,detail=m.kind,kind="button",action="mod_toggle",name=m.name,value=m.enabled and "On" or "Off",enabled=m.enabled,live=model.enabled} end
@@ -1622,6 +1625,7 @@ local function run_button(row,per_game)
     elseif action=="select_launcher" then A("launcher.select",{id=row.id})
     elseif action=="theme_black" or action=="theme_white" then S.state.white=action=="theme_white";save_state();apply_palette();if S.modal then close_modal(false) end;sound("toggle")
     elseif action=="theme_oled" then A("launcher.select",{id="switch-oled"})
+    elseif action=="theme_switch" then A("launcher.select",{id="switch-theme"})
     elseif action=="sort_title" or action=="sort_file" then S.sort=action=="sort_file" and "file" or "title";table.sort(S.games,function(a,b)return (S.sort=="file" and a.file or a.name)<(S.sort=="file" and b.file or b.name) end);S.library=1;S.scroll=0;S.scroll_target=0;S.scroll_velocity=0;close_modal("select")
     elseif action=="profile" then S.profile=row.profile;S.profile_return=S.screen=="settings" and "settings" or "home";open("profile");S.row=1
     elseif action=="choose_profile" then local r=A("profile.choose",{handle=S.profiles[row.profile].handle});if r.ok then refresh_models() end
