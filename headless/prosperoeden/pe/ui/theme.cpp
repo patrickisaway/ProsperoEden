@@ -190,6 +190,20 @@ Theme switch_theme()
     return t;
 }
 
+// The OLED variant shares the Switch layout and resources. Its native colours cover the
+// transition into the Lua launcher and the game's loading screen.
+Theme switch_oled_theme()
+{
+    Theme t = switch_theme();
+    t.id = "switch-oled";
+    t.name = "Switch OLED";
+    t.summary = "Switch UI with a pure black background for OLED displays.";
+    t.base = rgb(0x000000);
+    t.scrim = rgb(0x000000);
+    t.on_accent = rgb(0x000000);
+    return t;
+}
+
 // ---- accent presets: named colour sets a user can pick per theme ----
 
 const AccentPreset kSlateAccents[] = {
@@ -216,7 +230,7 @@ const AccentPreset kCanopyAccents[] = {
 
 struct Store
 {
-    std::array<Theme, 3> all{canopy(), slate(), switch_theme()};
+    std::array<Theme, 4> all{canopy(), slate(), switch_theme(), switch_oled_theme()};
     int index = 0;
     int accent = -1;
     Theme active = all[0];

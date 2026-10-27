@@ -1,22 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Updates: once per launch the app asks the homebrew.page catalog whether a newer release of
-// itself is listed, and can replace itself with it when the player says so.
-//
-// Both are the PS5 Native App Boilerplate's self-update kit (headless/update_check, see its
-// README.md): the check fetches the catalog's signed manifest and the app's own entry, verifies
-// the Ed25519 signature and the hashes, and compares the listed content version with this
-// build's (sce_sys/param.json). The update downloads the release ZIP from GitHub over HTTPS and
-// streams it to the self-update helper (self-updater.elf in the app's folder), which the app
-// sends to the console's payload loader: the helper checks and unpacks the release beside the
-// app, and once the app has closed it replaces the app's files and posts a notification. Nothing
-// is changed before the player confirms, and a failure or a cancel leaves the app as it was.
+// Updates: check this fork's GitHub releases. The in-app installer stays unavailable
+// until release packages can preserve locally supplied Switch resources.
 #pragma once
 #include <cstdint>
 #include <string>
 
 namespace Eden::UpdateNotice {
 // Starts the check on a thread of its own; only the first call of a launch does anything.
-void Start();
+bool Start();
+std::string CheckMessage();
 
 struct Offer {
     bool installable = false;  // the release can be installed by the app itself

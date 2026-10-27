@@ -1010,7 +1010,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         title = tr("Diagnostics");
         copy = option_ == 0 ? tr("Detailed logs apply to the next game launch.") :
                option_ == 1 ? tr("Keeps the last line before a crash, but games stutter. From the next start.") :
-                              tr("Says when homebrew.page has a newer version. Off, only About names it.");
+                              tr("Says when your fork has a newer GitHub release. Off, only About names it.");
         break;
     }
     text_shrink(c, title, 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display,
@@ -1376,7 +1376,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kAbout[] = {
             TR("Eden's debug messages in the logs of a game."),
             TR("Keeps the last line before a crash, but games stutter. From the next start."),
-            TR("Says when homebrew.page has a newer version. Off, only About names it.")};
+            TR("Says when your fork has a newer GitHub release. Off, only About names it.")};
         for (int row = 0; row < 3; ++row)
         {
             label(row, tr(kNames[row]), kToggle);

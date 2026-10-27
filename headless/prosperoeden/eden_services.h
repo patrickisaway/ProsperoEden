@@ -35,6 +35,8 @@ public:
     std::string game_path(const std::string& file) override;
     bool game_exists(const std::string& file) override;
     bool take_update(pe::ui::UpdateOffer* offer) override;
+    bool check_update() override;
+    std::string update_check_message() override;
     bool start_update() override;
     pe::ui::UpdateStatus update_status() override;
     void cancel_update() override;

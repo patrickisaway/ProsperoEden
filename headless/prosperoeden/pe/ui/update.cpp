@@ -209,7 +209,7 @@ void Launcher::layout_notes(Canvas &c)
     {
         y += 20.0f;
         NoteLine out;
-        out.text = tr("The rest is on the app's page on homebrew.page.");
+        out.text = tr("The rest is on your fork's GitHub release page.");
         out.y = y;
         out.height = std::round(text_size(th().size_small) * 1.6f);
         out.size = th().size_small;

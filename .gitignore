@@ -5,5 +5,5 @@ results/
 .local/
 __pycache__/
 
-# Nintendo-owned SwitchLauncher resources: added to the package locally, never committed.
-headless/prosperoeden/ui/switch/
+# Nintendo-owned SwitchLauncher resources are supplied locally by the builder.
+headless/prosperoeden/ui/switch/assets/

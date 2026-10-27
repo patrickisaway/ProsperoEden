@@ -32,7 +32,8 @@ namespace {
 constexpr std::size_t kStackSize = 1024 * 1024;
 
 std::mutex lock;
-bool started = false;
+bool started = false; // a check is running
+std::string check_message;
 bool found = false;  // an offer nobody has been told about yet
 self_update_check_result answer = SELF_UPDATE_UNKNOWN;
 self_update_offer offer{};
@@ -75,7 +76,35 @@ bool DevelopmentOffer(self_update_offer& out) {
 
 void* Check(void*) {
     self_update_offer result{};
-    self_update_check_result state = self_update_check_self(&result);
+    self_update_check_result state = SELF_UPDATE_UNKNOWN;
+    // This fork must never accept the original app's homebrew.page catalog: that ZIP
+    // would replace the embedded Switch UI. Look only at this fork's GitHub releases.
+    static constexpr const char* kReleases =
+        "https://api.github.com/repos/patrickisaway/ProsperoEden/releases?per_page=1";
+    const auto* platform = self_update_console();
+    char body[65536]{};
+    std::size_t length = 0;
+    int status = 0;
+    bool no_releases = false;
+    if (platform && platform->fetch &&
+        platform->fetch(platform->user, kReleases, body, sizeof(body), &length, &status) == 0 &&
+        status == 200) {
+        char tag_name[40]{};
+        if (update_check_json_string(body, length, "tag_name", tag_name, sizeof(tag_name)) == 1) {
+            const std::string tag = tag_name;
+            const std::string version = !tag.empty() && (tag[0] == 'v' || tag[0] == 'V') ? tag.substr(1) : tag;
+            int comparable = 0;
+            if (version.size() < sizeof(result.available) &&
+                update_check_version_compare(version.c_str(), kAppVersion, &comparable) > 0 && comparable) {
+                std::snprintf(result.name, sizeof(result.name), "ProsperoEden Switch");
+                std::snprintf(result.installed, sizeof(result.installed), "%s", kAppVersion);
+                std::snprintf(result.available, sizeof(result.available), "%s", version.c_str());
+                std::snprintf(result.version, sizeof(result.version), "%s", tag.c_str());
+                (void)update_check_json_string(body, length, "body", result.notes, sizeof(result.notes));
+                state = SELF_UPDATE_NOT_INSTALLABLE;
+            } else if (comparable) state = SELF_UPDATE_UP_TO_DATE;
+        } else no_releases = length == 2 && body[0] == '[' && body[1] == ']';
+    }
 #ifdef EDEN_DEV_PROFILE
     if (DevelopmentOffer(result)) {
         Report("update check", "Development: update-offer.txt replaces the catalog's answer");
@@ -99,11 +128,19 @@ void* Check(void*) {
                   result.available[0] ? result.available : "-", result.version[0] ? result.version : "-",
                   static_cast<unsigned long long>(result.size));
     Report("update check", line);
-    if (state == SELF_UPDATE_AVAILABLE || state == SELF_UPDATE_NOT_INSTALLABLE) {
+    {
         const std::lock_guard guard(lock);
-        answer = state;
-        offer = result;
-        found = true;
+        if (state == SELF_UPDATE_AVAILABLE || state == SELF_UPDATE_NOT_INSTALLABLE) {
+            answer = state;
+            offer = result;
+            found = true;
+        }
+        check_message = no_releases ? "No release has been published in this fork yet." :
+                        state == SELF_UPDATE_NOT_INSTALLABLE || state == SELF_UPDATE_AVAILABLE ?
+                        "A newer release is on GitHub. Install its ZIP manually." :
+                        state == SELF_UPDATE_UP_TO_DATE ? "This fork is up to date." :
+                        "GitHub releases could not be checked. Try again later.";
+        started = false;
     }
     return nullptr;
 }
@@ -122,20 +159,32 @@ Phase FromKit(self_update_phase phase) {
 }
 } // namespace
 
-void Start() {
+bool Start() {
     {
         const std::lock_guard guard(lock);
-        if (started) return;
+        if (started) return false;
         started = true;
+        answer = SELF_UPDATE_UNKNOWN;
+        found = false;
+        check_message = "Checking this fork's GitHub releases...";
     }
     pthread_attr_t attributes;
-    if (pthread_attr_init(&attributes) != 0) return;
+    if (pthread_attr_init(&attributes) != 0) { const std::lock_guard guard(lock); started = false; return false; }
     pthread_attr_setstacksize(&attributes, kStackSize);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
     pthread_t thread;
-    if (pthread_create(&thread, &attributes, Check, nullptr) != 0)
+    const bool launched = pthread_create(&thread, &attributes, Check, nullptr) == 0;
+    if (!launched) {
         Report("update check", "The thread could not start");
+        const std::lock_guard guard(lock); started = false;
+    }
     pthread_attr_destroy(&attributes);
+    return launched;
+}
+
+std::string CheckMessage() {
+    const std::lock_guard guard(lock);
+    return check_message;
 }
 
 bool Take(Offer* out) {

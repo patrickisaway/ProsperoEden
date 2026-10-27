@@ -1,17 +1,17 @@
 # Themes
 
-The launcher's look is a theme. This build has three: **Canopy** (a tropical dusk, dark green
-glass and lime), **Slate** (neutral glass, clean and still), and **Switch** (the full
+The launcher's look is a theme. This build has four: **Canopy** (a tropical dusk, dark green
+glass and lime), **Slate** (neutral glass, clean and still), and **Switch** and **Switch OLED** (the full
 [SwitchLauncher](https://github.com/kasobos67/SwitchLauncher) interface). Canopy is the default for a
 new install. **Settings > Appearance > Theme** lists the themes a build has; the choice is kept in the
 settings file as `"launcher": { "theme": "canopy" }`.
 
-Switch is selected through **Theme**, like Canopy and Slate. Its script, images, font,
+Switch and Switch OLED are selected through **Theme**, like Canopy and Slate. Its script, images, font,
 sounds and loading scene are packaged inside the app at `ui/switch`. There is no separate
 Switch launcher installation or SwitchLauncher update feed. Switch uses the app's existing
 runtime renderer internally so every HOME, Library, profile, settings, game options,
 dialog and transition uses the original presentation. Its white and black appearances
-remain choices within the Switch theme.
+remain choices within the Switch theme. Switch OLED uses a pure black background and keeps its appearance dark.
 
 **Settings > Appearance > Launcher** still selects separately installed runtime launchers
 that the upstream app supports; see [Runtime launcher packs](RUNTIME_LAUNCHERS.md).

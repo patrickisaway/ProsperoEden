@@ -3,6 +3,12 @@
 ProsperoEden is licensed under GPL-3.0-or-later (see [LICENSE](LICENSE)). It
 builds on the following projects, each under its own license.
 
+This fork incorporates the GPL-3.0-or-later Lua interface source from
+[SwitchLauncher](https://github.com/kasobos67/SwitchLauncher), version 1.005.000
+(commit `4bba0b9`), adapted as the built-in Switch and Switch OLED themes.
+Its Nintendo-derived artwork, font and recordings are excluded from this repository;
+see `headless/prosperoeden/ui/switch/ASSET_NOTICES.md`.
+
 ## Emulator
 
 - **[Eden](https://github.com/eden-emulator/mirror)**, GPL-3.0-or-later. The emulator core, built

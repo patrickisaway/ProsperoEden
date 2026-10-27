@@ -438,6 +438,9 @@ void Launcher::draw_language(Canvas &c)
 void Launcher::draw_about(Canvas &c)
 {
     gfx::DrawList &list = c.list;
+    const std::string check_message = services_.update_check_message();
+    const std::string update_line = !check_message.empty() ? check_message :
+        message_.empty() ? "github.com/patrickisaway/ProsperoEden/releases" : message_;
     draw_frame(c, tr("About ProsperoEden"), tr("Credits and setup"));
 
     if (th().top_nav)
@@ -492,10 +495,12 @@ void Launcher::draw_about(Canvas &c)
              t.size_small, t.accent_pale, Align::right);
         // A newer release the check found (with Update notices off, the one place that says so).
         if (!update_version_.empty())
-            text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), x,
+            text_shrink(c, fill(tr("Version {0} is on your fork's GitHub releases"), {update_version_}), x,
                         baseline(920.0f, 26.0f, t.size_small), t.size_small, t.meta, w - 200.0f);
-        static constexpr Hint kHints[] = {{Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
-        draw_footer(c, kHints, 2);
+        text_shrink(c, update_line, x,
+                    baseline(952.0f, 24.0f, t.size_small), t.size_small, t.meta, w);
+        static constexpr Hint kHints[] = {{Pad::circle, TR("Home")}, {Pad::triangle, TR("Check updates")}, {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, kHints, 3);
         return;
     }
 
@@ -531,7 +536,7 @@ void Launcher::draw_about(Canvas &c)
          th().accent_pale, Align::right);
     // A newer release the check found (with Update notices off, the one place that says so).
     if (!update_version_.empty())
-        text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), 144.0f,
+        text_shrink(c, fill(tr("Version {0} is on your fork's GitHub releases"), {update_version_}), 144.0f,
                     baseline(866.0f, 28.0f, th().size_small), th().size_small, th().meta, 540.0f);
 
     glass(c, kDetailPanel, th().radius_panel, th().panel.with_alpha(0.80f),
@@ -565,8 +570,10 @@ void Launcher::draw_about(Canvas &c)
                th().meta, 748.0f, 3, kShrink);
 
     c.list.pop_transform();
-    static constexpr Hint kHints[] = {{Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
-    draw_footer(c, kHints, 2);
+    text_shrink(c, update_line, 144.0f,
+                baseline(910.0f, 24.0f, th().size_small), th().size_small, th().meta, 748.0f);
+    static constexpr Hint kHints[] = {{Pad::circle, TR("Back")}, {Pad::triangle, TR("Check updates")}, {Pad::l1, TR("Sections"), Pad::r1}};
+    draw_footer(c, kHints, 3);
 }
 
 } // namespace pe::ui

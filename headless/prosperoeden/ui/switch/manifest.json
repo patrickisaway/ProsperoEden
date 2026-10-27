@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "switch-theme",
+  "name": "Switch",
+  "api": {
+    "major": 1,
+    "min_minor": 1
+  },
+  "entry": "main.lua",
+  "state_schema": 1,
+  "required_capabilities": [
+    "draw.atlas.v1",
+    "actions.launch.v1",
+    "audio.named-events.v1",
+    "loading.scene.v1"
+  ],
+  "assets": {
+    "icons": "assets/stock-icons.tga",
+    "ui": "assets/stock-ui.tga",
+    "profiles": "assets/stock-profiles.tga",
+    "controller": "assets/controller.tga",
+    "about": "assets/about-outline.tga",
+    "about_update": "assets/about-update.tga",
+    "home_blank": "assets/home-blank.tga"
+  },
+  "font": "assets/font.pefont",
+  "sounds": "assets/sounds",
+  "loading_scene": "loading.json",
+  "host_contract": "launcher-v1.0",
+  "version": "1.005.000"
+}

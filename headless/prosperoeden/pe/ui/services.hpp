@@ -34,7 +34,7 @@ enum class Key : std::uint8_t
     right,
 };
 
-// A newer release of the app, listed on homebrew.page.
+// A newer release of this fork, listed on GitHub.
 struct UpdateOffer
 {
     std::string version;      // its name: "v1.000.060"
@@ -380,7 +380,7 @@ struct Preferences
     // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
     // the theme's own art shows).
     std::string wallpaper;
-    // Settings > Diagnostics: the dialog (or notification) at the start when homebrew.page lists a
+    // Settings > Diagnostics: the dialog (or notification) at the start when the fork on GitHub lists a
     // newer release. Off, the check still runs and About names the newer version.
     bool update_notices = true;
 };
@@ -484,6 +484,14 @@ class Services
     virtual bool take_update(UpdateOffer *)
     {
         return false;
+    }
+    virtual bool check_update()
+    {
+        return false;
+    }
+    virtual std::string update_check_message()
+    {
+        return {};
     }
     // Installing it (the offer must be installable): begin downloading and unpacking it beside the
     // app (false: it could not begin), where that is, stop it (nothing is changed before

@@ -290,6 +290,12 @@ void Launcher::press(Key key)
             go_section(0);
         else if (key == Key::left)
             focus_rail();
+        else if (key == Key::triangle)
+        {
+            const bool checking = services_.check_update();
+            message_ = checking ? "Checking your fork's GitHub releases..." : "An update check is already running.";
+            cue(checking ? Cue::select : Cue::error);
+        }
         return;
     }
 }
@@ -575,7 +581,7 @@ void Launcher::draw_update_notice(Canvas &c)
         text_shrink(c, tr("Update available"), card.x + 88.0f, baseline(card.y + 18.0f, 34.0f, t.size_text),
                     t.size_text, t.title, card.w - 112.0f);
     }
-    text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), card.x + 88.0f,
+    text_shrink(c, fill(tr("Version {0} is on your fork's GitHub releases"), {update_version_}), card.x + 88.0f,
                 baseline(card.y + 54.0f, 30.0f, t.size_small), t.size_small, t.copy, card.w - 112.0f);
     // The time it has left.
     const float left = tween::clamp01(update_notice_left_ / kUpdateNoticeSeconds);

@@ -834,6 +834,9 @@ bool EdenServices::take_update(pe::ui::UpdateOffer* offer) {
     return true;
 }
 
+bool EdenServices::check_update() { return Eden::UpdateNotice::Start(); }
+std::string EdenServices::update_check_message() { return Eden::UpdateNotice::CheckMessage(); }
+
 bool EdenServices::start_update() { return Eden::UpdateNotice::Begin(); }
 
 pe::ui::UpdateStatus EdenServices::update_status() {
