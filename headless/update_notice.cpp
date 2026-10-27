@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <pthread.h>
 #include <string>
 
@@ -89,9 +90,11 @@ void* Check(void*) {
     if (platform && platform->fetch &&
         platform->fetch(platform->user, kReleases, body, sizeof(body), &length, &status) == 0 &&
         status == 200) {
-        char tag_name[40]{};
-        if (update_check_json_string(body, length, "tag_name", tag_name, sizeof(tag_name)) == 1) {
-            const std::string tag = tag_name;
+        const auto releases = nlohmann::json::parse(body, body + length, nullptr, false);
+        if (releases.is_array() && !releases.empty() && releases.front().is_object() &&
+            releases.front().contains("tag_name") && releases.front()["tag_name"].is_string()) {
+            const auto& release = releases.front();
+            const std::string tag = release["tag_name"].get<std::string>();
             const std::string version = !tag.empty() && (tag[0] == 'v' || tag[0] == 'V') ? tag.substr(1) : tag;
             int comparable = 0;
             if (version.size() < sizeof(result.available) &&
@@ -100,10 +103,11 @@ void* Check(void*) {
                 std::snprintf(result.installed, sizeof(result.installed), "%s", kAppVersion);
                 std::snprintf(result.available, sizeof(result.available), "%s", version.c_str());
                 std::snprintf(result.version, sizeof(result.version), "%s", tag.c_str());
-                (void)update_check_json_string(body, length, "body", result.notes, sizeof(result.notes));
+                if (release.contains("body") && release["body"].is_string())
+                    std::snprintf(result.notes, sizeof(result.notes), "%s", release["body"].get<std::string>().c_str());
                 state = SELF_UPDATE_NOT_INSTALLABLE;
             } else if (comparable) state = SELF_UPDATE_UP_TO_DATE;
-        } else no_releases = length == 2 && body[0] == '[' && body[1] == ']';
+        } else no_releases = releases.is_array() && releases.empty();
     }
 #ifdef EDEN_DEV_PROFILE
     if (DevelopmentOffer(result)) {
